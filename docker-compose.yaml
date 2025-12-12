@@ -1,0 +1,119 @@
+services:
+
+  # Redis
+  redis:
+    image: redis:7
+    container_name: redis
+    restart: always
+    ports:
+      - "6379:6379"
+
+  # Postgres for User and Order Services
+  postgres:
+    image: postgres:16-alpine
+    container_name: postgres
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: practical_course
+    ports:
+      - "5432:5432"
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+      - ./init-db:/docker-entrypoint-initdb.d
+    command:
+      - "postgres"
+      - "-c"
+      - "ssl=off"
+      - "-c"
+      - "listen_addresses=*"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d practical_course" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # User Service
+  user-service:
+    build:
+      context: "D:/Innowise/user-service"
+      dockerfile: docker/Dockerfile
+    container_name: user-service
+    restart: always
+    depends_on:
+      - postgres
+      - redis
+    ports:
+      - "8083:8083"
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/practical_course?currentSchema=user_service
+      SPRING_DATA_REDIS_HOST: redis
+
+  # Postgres for Auth Service
+  postgres_auth:
+    image: postgres:16-alpine
+    container_name: postgres_auth
+    restart: always
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: user_credentials_db
+    ports:
+      - "5433:5432"
+    volumes:
+      - postgres_auth_data:/var/lib/postgresql/data   # ← отдельный том!
+    command:
+      - "postgres"
+      - "-c"
+      - "ssl=off"
+      - "-c"
+      - "listen_addresses=*"
+    healthcheck:
+      test: [ "CMD-SHELL", "pg_isready -U postgres -d user_credentials_db" ]
+      interval: 5s
+      timeout: 5s
+      retries: 10
+
+  # Auth Service
+  auth-service:
+    build:
+      context: "D:/Innowise/auth-service"
+      dockerfile: docker/Dockerfile
+    ports:
+      - "8081:8081"
+    depends_on:
+      - postgres_auth
+
+  # Order Service
+  order-service:
+    build:
+      context: "D:/Innowise/order-service"
+      dockerfile: docker/Dockerfile
+    container_name: order-service
+    restart: always
+    ports:
+      - "8082:8082"
+    depends_on:
+      - postgres
+      - redis
+    environment:
+      SPRING_DATASOURCE_URL: jdbc:postgresql://postgres:5432/practical_course?currentSchema=order_service
+      SPRING_DATA_REDIS_HOST: redis
+      USER_SERVICE_URL: http://user-service:8083
+
+  gateway:
+    build:
+      context: "D:/Innowise/api-gateway"
+      dockerfile: docker/Dockerfile
+    container_name: api-gateway
+    ports:
+      - "8080:8080"
+    depends_on:
+      - auth-service
+      - user-service
+      - order-service
+
+volumes:
+  postgres_data:
+  postgres_auth_data:
