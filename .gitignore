@@ -31,3 +31,9 @@ build/
 
 ### VS Code ###
 .vscode/
+
+
+### Mongo Data ###
+mongo-data/
+*.wt
+WiredTiger*
