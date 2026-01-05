@@ -37,7 +37,7 @@ services:
   # User Service
   user-service:
     build:
-      context: "D:/Innowise/user-service"
+      context: ../user-service
       dockerfile: docker/Dockerfile
     container_name: user-service
     restart: always
@@ -62,7 +62,7 @@ services:
     ports:
       - "5433:5432"
     volumes:
-      - postgres_auth_data:/var/lib/postgresql/data   # ← отдельный том!
+      - postgres_auth_data:/var/lib/postgresql/data
     command:
       - "postgres"
       - "-c"
@@ -78,7 +78,7 @@ services:
   # Auth Service
   auth-service:
     build:
-      context: "D:/Innowise/auth-service"
+      context: ../auth-service
       dockerfile: docker/Dockerfile
     ports:
       - "8081:8081"
@@ -88,7 +88,7 @@ services:
   # Order Service
   order-service:
     build:
-      context: "D:/Innowise/order-service"
+      context: ../order-service
       dockerfile: docker/Dockerfile
     container_name: order-service
     restart: always
@@ -104,7 +104,7 @@ services:
 
   gateway:
     build:
-      context: "D:/Innowise/api-gateway"
+      context: ../api-gateway
       dockerfile: docker/Dockerfile
     container_name: api-gateway
     ports:
