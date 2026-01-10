@@ -29,8 +29,8 @@ spec:
     spec:
       containers:
         - name: gateway
-          image: gateway:latest
-          imagePullPolicy: IfNotPresent
+          image: nikitayatsko/api-gateway:latest
+          imagePullPolicy: Always
           ports:
             - containerPort: 8080
           readinessProbe:
@@ -51,8 +51,8 @@ spec:
 
           resources:
             requests:
-              memory: "256Mi"
-              cpu: "250m"
+              memory: "128Mi"
+              cpu: "200m"
             limits:
-              memory: "512Mi"
+              memory: "1Gi"
               cpu: "500m"
