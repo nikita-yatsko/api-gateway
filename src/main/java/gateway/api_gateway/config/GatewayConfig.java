@@ -25,6 +25,9 @@ public class GatewayConfig {
                 .route("auth-service", r -> r.path("/api/auth/**")
                         .filters(f -> f.filter(jwtValidationFilter))
                         .uri("http://auth-service:8081"))
+                .route("payment-service", r -> r.path("/api/payment/**")
+                        .filters(f -> f.filter(jwtValidationFilter))
+                        .uri("http://payment-service:8084"))
                 .build();
     }
 }
