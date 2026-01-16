@@ -3,3 +3,19 @@ server:
 spring:
   application:
     name: api-gateway
+
+management:
+  endpoints:
+    web:
+      exposure:
+        include: health,info,prometheus
+  metrics:
+    tags:
+      application: ${spring.application.name}
+  tracing:
+    enabled: true
+    sampling:
+      probability: 1.0
+    otlp:
+      tracing:
+        endpoint: http://tempo:4318/v1/traces
