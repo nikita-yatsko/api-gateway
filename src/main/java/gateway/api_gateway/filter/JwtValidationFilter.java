@@ -1,8 +1,9 @@
 package gateway.api_gateway.filter;
 
-import gateway.api_gateway.Dto.Token;
-import gateway.api_gateway.Dto.UserInfo;
+import gateway.api_gateway.dto.Token;
+import gateway.api_gateway.dto.UserInfo;
 import gateway.api_gateway.validator.RouterValidator;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.cloud.gateway.filter.GatewayFilter;
 import org.springframework.cloud.gateway.filter.GatewayFilterChain;
 import org.springframework.core.io.buffer.DataBuffer;
@@ -15,6 +16,7 @@ import org.springframework.web.reactive.function.client.WebClient;
 import org.springframework.web.server.ServerWebExchange;
 import reactor.core.publisher.Mono;
 
+@Slf4j
 @Component
 public class JwtValidationFilter implements GatewayFilter {
 
@@ -50,6 +52,7 @@ public class JwtValidationFilter implements GatewayFilter {
                 .retrieve()
                 .bodyToMono(UserInfo.class)
                 .flatMap(userInfo -> {
+                    log.info("UserInfo from auth: {}", userInfo);
 
                     ServerHttpRequest mutated = exchange.getRequest()
                             .mutate()
@@ -60,7 +63,10 @@ public class JwtValidationFilter implements GatewayFilter {
 
                     return chain.filter(exchange.mutate().request(mutated).build());
                 })
-                .onErrorResume(e -> unauthorized(exchange, "Invalid token"));
+                .onErrorResume(e -> {
+                    log.error("JWT validation failed", e);
+                    return unauthorized(exchange, "Invalid token");
+                });
     }
 
     private Mono<Void> unauthorized(ServerWebExchange exchange, String message) {
